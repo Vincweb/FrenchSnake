@@ -1,112 +1,167 @@
 /**
  * JS Game Snake
  */
-console.log("Lancement du jeu Snake");
 
-var KEY_DOWN = 40;
-var KEY_UP = 38;
-var KEY_LEFT = 37;
-var KEY_RIGHT = 39;
+function frenshsnake() {
 
-var speed = 100;
+    console.log("Lancement du jeu Snake");
 
-// Create grille
-var grilleHeight = (Math.round(window.innerHeight / 10) % 2 == 0) ? Math.round(window.innerHeight / 10) : Math.round(window.innerHeight / 10) - 1;
-var grilleWidth = (Math.round(document.querySelector('body').clientWidth / 10) % 2 == 0) ? Math.round(document.querySelector('body').clientWidth / 10) : Math.round(document.querySelector('body').clientWidth / 10) - 1;
+    const KEY_DOWN = 40;
+    const KEY_UP = 38;
+    const KEY_LEFT = 37;
+    const KEY_RIGHT = 39;
 
-console.log("Grille de jeu "+grilleHeight+"x"+grilleWidth);
+    var speed = 100;
+    var square = 10;
 
-var grille = new Array(grilleHeight);
-for (i = 0; i < grille.length; i++) {
-    grille[i] = new Array(grilleWidth);
-}
-/*
-Legende :
-0 or null : empty
-1: circle
-2: square
-*/
+    // Create grille
+    const Height = (Math.round(window.innerHeight / square) % 2 == 0) ? Math.round(window.innerHeight / square) : Math.round(window.innerHeight / square) - 1;
+    const Width = (Math.round(document.querySelector('body').clientWidth / square) % 2 == 0) ? Math.round(document.querySelector('body').clientWidth / square) : Math.round(document.querySelector('body').clientWidth / square) - 1;
 
-//Add square
-grille[grilleHeight / 2][grilleWidth / 2] = 2;
+    console.log("Grille de jeu " + Height + "x" + Width);
 
-function addCircle(top, left) {
-    //controlFullGrille();
-    if (grille[top][left] != 0) {
-        //addCircle(Math.floor((Math.random() * grilleHeight)), Math.floor((Math.random() * grilleWidth)));
-    } else {
-        grille[top][left] = 1;
-        document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="circle" style="top:' + top * 10 + 'px;left:' + left * 10 + 'px;"></div>';
-    }
-}
 
-function controlFullGrille() {
-    for (i = 0; i < grilleHeight; i++) {
-        for (j = 0; j < grilleWidth; j++) {
-            if (grille[i][j] == 0 || grille[i][j] == null) return false;
+    function Snake() {
+        var position = [];
+        position.push(new Array((Height / 2), (Width / 2)));
+
+        this.getPosition = function () {
+            return position;
+        };
+
+        this.moveUP = function () {
+            position.unshift([position[0][0]-1,position[0][1]]);
+            position.pop();
+        }
+
+        this.moveDOWN = function () {
+            position.unshift([position[0][0]+1, position[0][1]]);
+            position.pop();
+        }
+
+        this.moveLEFT = function () {
+            position.unshift([position[0][0], position[0][1]-1]);
+            position.pop();
+        }
+
+        this.moveRIGHT = function () {
+            position.unshift([position[0][0], position[0][1]+1]);
+            position.pop();
+        }
+
+        this.addSnake = function () {
+            position.push([position[position.length-1][0], position[position.length-1][1]]);
         }
     }
-    return true;
-}
 
-addCircle(Math.floor((Math.random() * grilleHeight)), Math.floor((Math.random() * grilleWidth)));
+    var snake = new Snake();
 
-function moveSquare(top, left) {
-    if (grille[top][left] == 1) {
-        console.log("On l'a mangé !!");
-        addCircle(Math.floor((Math.random() * grilleHeight)), Math.floor((Math.random() * grilleWidth)));
+    function Circle() {
+        var position = new Array();
+
+        this.getPosition = function () {
+            return position;
+        }
+
+        this.newCircle = function () {
+            position = new Array();
+            position.push(new Array(Math.round(Math.floor((Math.random() * Height))), Math.round(Math.floor((Math.random() * Width)))));
+        }
     }
 
-    document.querySelector('#square').style.top = 0
-}
+    var circle = new Circle();
+    circle.newCircle();
 
-var move;
+    render();
 
-document.onkeydown = function () {
-    switch (window.event.keyCode) {
-        case KEY_DOWN:
-            clearInterval(move);
-            move = setInterval(function () {
-                if (document.querySelector('#square').offsetTop > window.innerHeight) {
-                    document.querySelector('#square').style.top = 0;
+    function collision() {
+        if (snake.getPosition()[0][0] == circle.getPosition()[0][0] && snake.getPosition()[0][1] == circle.getPosition()[0][1]) {
+            console.log("On mange !!");
+            circle.newCircle();
+            snake.addSnake();
+        }
+
+        if (snake.getPosition()[0][0] > Height || snake.getPosition()[0][0] < 0) {
+            console.log("Touche le mur !!");
+            return true;
+        }
+
+        if (snake.getPosition()[0][1] > Width || snake.getPosition()[0][1] < 0) {
+            console.log("Touche le mur !!");
+            return true;
+        }
+
+        if (snake.getPosition().length > 4) {
+            var snakeHead = snake.getPosition()[0];
+            var snakeOutHead = [... snake.getPosition()];
+            snakeOutHead.shift();
+            snakeOutHead.forEach(element => {
+                if(element[0] == snakeHead[0] && element[1] == snakeHead[1]){
+                    console.log("Aieee !!");
+                    return true;
                 }
-                else {
-                    document.querySelector('#square').style.top = (document.querySelector('#square').offsetTop + document.querySelector('#square').clientWidth) + 'px';
-                }
-            }, speed);
-            break;
-        case KEY_UP:
-            clearInterval(move);
-            move = setInterval(function () {
-                if (document.querySelector('#square').offsetTop < 0) {
-                    document.querySelector('#square').style.top = window.innerHeight + 'px';
-                }
-                else {
-                    document.querySelector('#square').style.top = (document.querySelector('#square').offsetTop - document.querySelector('#square').clientWidth) + 'px';
-                }
-            }, speed);
-            break;
-        case KEY_LEFT:
-            clearInterval(move);
-            move = setInterval(function () {
-                if (document.querySelector('#square').offsetLeft < 0) {
-                    document.querySelector('#square').style.left = document.querySelector('body').clientWidth + 'px';
-                }
-                else {
-                    document.querySelector('#square').style.left = (document.querySelector('#square').offsetLeft - document.querySelector('#square').clientWidth) + 'px';
-                }
-            }, speed);
-            break;
-        case KEY_RIGHT:
-            clearInterval(move);
-            move = setInterval(function () {
-                if (document.querySelector('#square').offsetLeft > document.querySelector('body').clientWidth) {
-                    document.querySelector('#square').style.left = 0;
-                }
-                else {
-                    document.querySelector('#square').style.left = (document.querySelector('#square').offsetLeft + document.querySelector('#square').clientWidth) + 'px';
-                }
-            }, speed);
-            break;
+            });
+        }
     }
+
+    function render() {
+        collision();
+
+        document.querySelector('#grille').innerHTML = "";
+        snake.getPosition().forEach(element => {
+            document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="square" style="top:' + element[0] * square + 'px;left:' + element[1] * square + 'px;"></div>';
+        });
+
+        circle.getPosition().forEach(element => {
+            document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="circle" style="top:' + element[0] * square + 'px;left:' + element[1] * square + 'px;"></div>';
+        });
+    }
+
+    var move;
+    var lastKeyPress;
+
+    document.onkeydown = function () {
+        switch (window.event.keyCode) {
+            case KEY_DOWN:
+                if (lastKeyPress == KEY_UP) break;
+                lastKeyPress = KEY_DOWN;
+                clearInterval(move);
+                move = setInterval(function () {
+                    snake.moveDOWN();
+                    render();
+                }, speed);
+                break;
+            case KEY_UP:
+                if (lastKeyPress == KEY_DOWN) break;
+                lastKeyPress = KEY_UP;
+                clearInterval(move);
+                move = setInterval(function () {
+                    snake.moveUP();
+                    render();
+                }, speed);
+                break;
+            case KEY_LEFT:
+                if (lastKeyPress == KEY_RIGHT) break;
+                lastKeyPress = KEY_LEFT;
+                clearInterval(move);
+                move = setInterval(function () {
+                    snake.moveLEFT();
+                    render();
+                }, speed);
+                break;
+            case KEY_RIGHT:
+                if (lastKeyPress == KEY_LEFT) break;
+                lastKeyPress = KEY_RIGHT;
+                clearInterval(move);
+                move = setInterval(function () {
+                    snake.moveRIGHT();
+                    render();
+                }, speed);
+                break;
+            default:
+                clearInterval(move);
+                break;
+        }
+    }
+
 }

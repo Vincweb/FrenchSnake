@@ -2,7 +2,7 @@
 CSS Game Snake
 */
 
-#square {
+.square {
     position: absolute;
     top: 50%;
     left: 50%;
