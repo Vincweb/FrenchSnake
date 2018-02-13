@@ -2,7 +2,7 @@
  * JS Menu Snake
  */
 
-(function () {
+function menu() {
 
     console.log("Menu snake");
 
@@ -28,4 +28,6 @@
         }
     }
 
-})()
+}
+
+menu();
