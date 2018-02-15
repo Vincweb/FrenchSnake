@@ -16,8 +16,8 @@
     const KEY_ENTER = 13;
 
     // Level Game
-    var speed = 50;
-    var square = 10;
+    var speed = 80;
+    var square = 40;
     var score = 0;
 
     // Create grille
@@ -26,10 +26,13 @@
 
     // Initialise Object
     var snake = new Snake();
-    var circle = new Circle(); 
+    var circle = new Circle();
 
     // Initialise Move
     var move;
+
+    // pseudo gamer
+    var pseudo = "vincent";
 
     // Object Snake
     function Snake() {
@@ -75,10 +78,54 @@
 
         this.newCircle = function () {
             position = new Array();
-            position.push(new Array(Math.round(Math.floor((Math.random() * Height))), Math.round(Math.floor((Math.random() * Width)))));
+            var freeCase = [Height];
+            //debugger;
+            position.push(new Array(randNumberHeight(), randNumberWidth()));
+        }
+
+        randNumberHeight = function () {
+            var i = Math.round(Math.floor((Math.random() * Height)));
+            var j = Math.round(Math.floor((Math.random() * Width)));
+            snake.getPosition().forEach(element => {
+                if (element[0] == i && element[1] == j) randNumberHeight();
+            });
+            return i;
+        }
+
+        randNumberWidth = function () {
+            var i = Math.round(Math.floor((Math.random() * Width)));
+            var j = Math.round(Math.floor((Math.random() * Width)));
+            snake.getPosition().forEach(element => {
+                if (element[0] == i && element[1] == j) randNumberWidth();
+            });
+            return j;
         }
 
         this.newCircle();
+    }
+
+    // Get score 
+    function getScore() {
+        var ref = firebase.database().ref('score');
+
+        ref.on("value", function (snapshot) {
+            console.log(snapshot.val());
+        });
+    }
+
+    // Save Score
+    function saveScore() {
+        // Get a reference to the database service
+        var database = firebase.database();
+
+        function writeUserData(score) {
+            firebase.database().ref('score/'+ Date.now()).set({
+                Username: pseudo,
+                Score: score
+            });
+        }
+
+        writeUserData(score);
     }
 
     // Game Over
@@ -93,7 +140,10 @@
         document.querySelector('#score').style.display = "block";
         document.querySelector('#grille').style.display = "none";
 
-        document.querySelector('#score').innerHTML = '<h1> Score : '+score+'</h1>';
+        document.querySelector('#score').innerHTML = '<h1> Score : ' + score + '</h1>';
+
+        // Save the score
+        saveScore();
 
         document.onkeydown = function () {
             switch (window.event.keyCode) {
@@ -142,7 +192,7 @@
             document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="circle" style="height:' + square + 'px;width:' + square + 'px;top:' + element[0] * square + 'px;left:' + element[1] * square + 'px;"></div>';
         });
     }
-    
+
 
     // Run game
     function game() {
@@ -155,13 +205,16 @@
 
         // First view
         render();
-        
+
         // Move Game
+        var runKeyPress = true;
         var lastKeyPress;
 
         document.onkeydown = function () {
             switch (window.event.keyCode) {
                 case KEY_DOWN:
+                    if (!runKeyPress) break;
+                    runKeyPress = false;
                     if (lastKeyPress == KEY_UP) break;
                     lastKeyPress = KEY_DOWN;
                     clearInterval(move);
@@ -169,9 +222,12 @@
                         snake.moveDOWN();
                         collision();
                         render();
+                        runKeyPress = true;
                     }, speed);
                     break;
                 case KEY_UP:
+                    if (!runKeyPress) break;
+                    runKeyPress = false;
                     if (lastKeyPress == KEY_DOWN) break;
                     lastKeyPress = KEY_UP;
                     clearInterval(move);
@@ -179,9 +235,12 @@
                         snake.moveUP();
                         collision();
                         render();
+                        runKeyPress = true;
                     }, speed);
                     break;
                 case KEY_LEFT:
+                    if (!runKeyPress) break;
+                    runKeyPress = false;
                     if (lastKeyPress == KEY_RIGHT) break;
                     lastKeyPress = KEY_LEFT;
                     clearInterval(move);
@@ -189,9 +248,12 @@
                         snake.moveLEFT();
                         collision();
                         render();
+                        runKeyPress = true;
                     }, speed);
                     break;
                 case KEY_RIGHT:
+                    if (!runKeyPress) break;
+                    runKeyPress = false;
                     if (lastKeyPress == KEY_LEFT) break;
                     lastKeyPress = KEY_RIGHT;
                     clearInterval(move);
@@ -199,6 +261,7 @@
                         snake.moveRIGHT();
                         collision();
                         render();
+                        runKeyPress = true;
                     }, speed);
                     break;
             }

@@ -1,0 +1,23 @@
+{
+  "name": "frenchsnake",
+  "version": "1.0.0",
+  "description": "French Snake",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vincweb/FrenchSnake.git"
+  },
+  "author": "Vincweb",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vincweb/FrenchSnake/issues"
+  },
+  "homepage": "https://github.com/Vincweb/FrenchSnake#readme",
+  "dependencies": {
+    "express": "^4.15.2",
+    "socket.io": "^2.0.4"
+  }
+}
