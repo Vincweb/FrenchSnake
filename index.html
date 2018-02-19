@@ -8,6 +8,11 @@
   <title>French Snake</title>
   <link rel="stylesheet" type="text/css" href="./frenchsnake/css/snake.css">
   <style>
+    @font-face {
+      font-family: "minecraftia";
+      src: url("./frenchsnake/front/minecraftia/Minecraftia-Regular.ttf");
+    }
+
     html {
       height: 100%;
       margin: 0px;
@@ -15,6 +20,8 @@
     }
 
     body {
+      font-family: "minecraftia";
+      color: white;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -22,15 +29,19 @@
       height: 100%;
       padding: 5px;
       margin: 0px;
-      border: 5px solid white;
     }
   </style>
 </head>
 
 <body>
 
+  <div id="pseudo">
+    <h1>Choose your pseudo</h1>
+    <input type="text" class="pseudo" autofocus/>
+  </div>
+
   <div id="menu">
-    <h1>French Snake - Menu</h1>
+    <h1>French Snake <br> Menu</h1>
     <p>Insert the coin</p>
   </div>
 

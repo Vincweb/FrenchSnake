@@ -3,11 +3,9 @@ CSS Game Snake
 */
 
 #menu {
-    background-color: white;
-    border-radius: 10px;
-    height: 200px;
-    width: 400px;
     text-align: center;
+    opacity : 0;
+    transition: all 3s;
   }
 
 .square {
@@ -24,10 +22,27 @@ CSS Game Snake
   }
 
   #score {
-    background-color: white;
-    border-radius: 10px;
-    height: 200px;
-    width: 400px;
     text-align: center;
-    display: none;
+    opacity : 0;
+    transition: all 3s;
+  }
+
+  #grilleScore{
+    position: absolute;
+    top: 5px;
+    left: 5px;
+  }
+
+  #pseudo {
+    text-align: center;
+    opacity : 0;
+    transition: all 3s;
+  }
+
+  .pseudo{
+    font-family: "minecraftia";
+    text-align: center;
+    background-color: black;
+    color: white;
+    border: none;
   }

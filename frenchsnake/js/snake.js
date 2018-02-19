@@ -4,6 +4,37 @@
  * <vincent.caudron@hotmail.fr>
  */
 
+// Test this by running the code snippet below and then
+// use the "Offline" checkbox in DevTools Network panel
+var connection;
+window.addEventListener('load', function () {
+    function updateOnlineStatus(event) {
+        if (navigator.onLine) {
+            // handle online status
+            console.log('Your are online !');
+            connection = true;
+        } else {
+            // handle offline status
+            console.log('Your are offline !');
+            connection = false;
+        }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    updateOnlineStatus();
+});
+
+
+// Web Storage 
+if (typeof(Storage) !== "undefined") {
+    console.log("Web Storage work !");
+} else {
+    console.log("Web Storage don't work !");
+}
+
+
 (function frenshsnake() {
 
     console.log("Welcome to the French Snake !");
@@ -19,6 +50,7 @@
     var speed = 80;
     var square = 40;
     var score = 0;
+    var bestScore = Array();
 
     // Create grille
     const Height = (Math.round(window.innerHeight / square) % 2 == 0) ? Math.round(window.innerHeight / square) : Math.round(window.innerHeight / square) - 1;
@@ -32,7 +64,7 @@
     var move;
 
     // pseudo gamer
-    var pseudo = "vincent";
+    var pseudo;
 
     // Object Snake
     function Snake() {
@@ -106,44 +138,65 @@
 
     // Get score 
     function getScore() {
-        var ref = firebase.database().ref('score');
 
-        ref.on("value", function (snapshot) {
-            console.log(snapshot.val());
-        });
+        if (connection) {
+            var ref = firebase.database().ref('score');
+
+            ref.on("value", function (snapshot) {
+                var scoreOnline = snapshot.val();
+
+                scoreOnline = Object.entries(scoreOnline);
+
+                scoreOnline.forEach(element => {
+                    bestScore.push([element[1]['Score'], element[1]['Username']]);
+                });
+            });
+        }
+
+        //localStorage.getItem('bestScore');
+
     }
 
     // Save Score
     function saveScore() {
-        // Get a reference to the database service
-        var database = firebase.database();
+                 
+        //sessionStorage.setItem("bestScore", bestScore);
 
-        function writeUserData(score) {
-            firebase.database().ref('score/'+ Date.now()).set({
-                Username: pseudo,
-                Score: score
-            });
+        if (connection) {
+            // Get a reference to the database service
+            var database = firebase.database();
+
+            function writeUserData(score) {
+                firebase.database().ref('score/' + Date.now()).set({
+                    Username: pseudo,
+                    Score: score
+                });
+            }
+
+            writeUserData(score);
+
+            console.log("Score saved !");
         }
-
-        writeUserData(score);
     }
 
     // Game Over
     function gameOver() {
+
+        visibilityMenu("gameOver");
 
         // Stop the move
         clearInterval(move);
         snake = new Snake();
         circle = new Circle();
 
-        document.querySelector('#menu').style.display = "none";
-        document.querySelector('#score').style.display = "block";
-        document.querySelector('#grille').style.display = "none";
-
-        document.querySelector('#score').innerHTML = '<h1> Score : ' + score + '</h1>';
+        console.log("Your score : " + score);
 
         // Save the score
         saveScore();
+
+        document.querySelector('#score').innerHTML = '<h1> Score : ' + score + '</h1>';
+
+        getScore();
 
         document.onkeydown = function () {
             switch (window.event.keyCode) {
@@ -191,14 +244,14 @@
         circle.getPosition().forEach(element => {
             document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="circle" style="height:' + square + 'px;width:' + square + 'px;top:' + element[0] * square + 'px;left:' + element[1] * square + 'px;"></div>';
         });
-    }
 
+        document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + "<div id='grilleScore'> Score : " + score + "</div>";
+    }
 
     // Run game
     function game() {
-        document.querySelector('#menu').style.display = "none";
-        document.querySelector('#score').style.display = "none";
-        document.querySelector('#grille').style.display = "block";
+
+        visibilityMenu("game");
 
         // Initialise Score Game
         score = 0;
@@ -268,16 +321,43 @@
         }
     }
 
-    // Menu game
-    function menu() {
-        document.querySelector('#menu').style.display = "block";
-        document.querySelector('#score').style.display = "none";
-        document.querySelector('#grille').style.display = "none";
+    // Choose the pseudo
+    function choosePseudo() {
+
+        visibilityMenu("pseudo");
+
+        document.querySelector('body').onclick = function () {
+            document.querySelector('.pseudo').focus();
+        }
 
         document.onkeydown = function () {
             switch (window.event.keyCode) {
                 case KEY_ENTER:
-                    game();
+                    pseudo = document.querySelector('.pseudo').value;
+                    if (pseudo.length < 3) {
+                        console.log("Choose a pseudo (minumum 3 caracters) !")
+                    } else {
+                        console.log("Your pseudo : " + pseudo);
+                        game();
+                    }
+                    break;
+            }
+        }
+    }
+
+    // Menu game
+    function menu() {
+
+        visibilityMenu("menu");
+
+        document.onkeydown = function () {
+            switch (window.event.keyCode) {
+                case KEY_ENTER:
+                    if (pseudo == null) {
+                        choosePseudo();
+                    } else {
+                        game();
+                    }
                     break;
                 case KEY_DOWN:
                     // Menu
@@ -289,7 +369,43 @@
         }
     }
 
+    // View the correct page
+    function visibilityMenu(page) {
+        if (page == "menu") {
+            document.querySelector('#menu').style.opacity = "1";
+            document.querySelector('#menu').style.display = "block";
+            document.querySelector('#score').style.display = "none";
+            document.querySelector('#pseudo').style.display = "none";
+            document.querySelector('#grille').style.display = "none";
+        }
+
+        if (page == "pseudo") {
+            document.querySelector('#pseudo').style.display = "block";
+            document.querySelector('#pseudo').style.opacity = "1";
+            document.querySelector('#menu').style.display = "none";
+        }
+
+        if (page == "game") {
+            document.querySelector('#pseudo').style.opacity = "0";
+            document.querySelector('#pseudo').style.display = "none";
+            document.querySelector('#menu').style.opacity = "0";
+            document.querySelector('#menu').style.display = "none";
+            document.querySelector('#grille').style.display = "block";
+            document.querySelector('#grille').style.opacity = "1";
+
+        }
+
+        if (page == "gameOver") {
+            document.querySelector('#score').style.opacity = "1";
+            document.querySelector('#score').style.display = "block";
+            document.querySelector('#grille').style.opacity = "0";
+        }
+    }
+
     // Lancement du Menu
     menu();
+
+    // Disebale Click right
+    //document.oncontextmenu = new Function("return false");
 
 })()
