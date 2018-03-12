@@ -27,7 +27,9 @@
 
     // Initialise Object
     var snake = new Snake();
-    var circle = new Circle();
+    var circleBleu = new Circle();
+    var circleWhite = new Circle();
+    var circleRed = new Circle();
 
     // Initialise Move
     var move;
@@ -67,6 +69,12 @@
         this.addSnake = function () {
             position.push([position[position.length - 1][0], position[position.length - 1][1]]);
         }
+
+        this.subSnake = function () {
+            if (position.length > 1) {
+                position.pop();
+            }
+        }
     }
 
     // Object Circle
@@ -80,6 +88,11 @@
         this.newCircle = function () {
             position = new Array();
             position.push(new Array(randNumberHeight(), randNumberWidth()));
+        }
+
+        this.eatCircle = function () {
+            position = new Array();
+            position.push(new Array(-1, -1));
         }
 
         randNumberHeight = function () {
@@ -304,14 +317,42 @@
 
     // Detection collision
     function collision() {
-        // Snake eat
-        if (snake.getPosition()[0][0] == circle.getPosition()[0][0] && snake.getPosition()[0][1] == circle.getPosition()[0][1]) {
-            circle.newCircle();
+        // Snake eat Bleu
+        if (snake.getPosition()[0][0] == circleBleu.getPosition()[0][0] && snake.getPosition()[0][1] == circleBleu.getPosition()[0][1]) {
+            circleBleu.eatCircle();
             snake.addSnake();
             score = score + 10;
-            if (speed > 20) {
-                speed = speed - 1;
+        }
+
+        // Snake eat White
+        if (snake.getPosition()[0][0] == circleWhite.getPosition()[0][0] && snake.getPosition()[0][1] == circleWhite.getPosition()[0][1]) {
+            circleWhite.eatCircle();
+            if (circleBleu.getPosition()[0][0] != -1) {
+                circleBleu.eatCircle();
+                snake.subSnake();
+                score = score - 20;
+            } else {
+                snake.addSnake();
+                score = score + 10;
             }
+        }
+
+        // Snake eat Red
+        if (snake.getPosition()[0][0] == circleRed.getPosition()[0][0] && snake.getPosition()[0][1] == circleRed.getPosition()[0][1]) {
+            if (circleWhite.getPosition()[0][0] != -1 || circleBleu.getPosition()[0][0] != -1) {
+                score = score - 20;
+                snake.addSnake();
+                snake.subSnake();
+                snake.subSnake();
+            } else {
+                score = score + 10;
+                if (speed > 50) {
+                    speed = speed - 2;
+                }
+            }
+            circleBleu.newCircle();
+            circleWhite.newCircle();
+            circleRed.newCircle();
         }
 
         // Snake touch wall
@@ -339,8 +380,16 @@
             document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="square" style="height:' + square + 'px;width:' + square + 'px;top:' + element[0] * square + 'px;left:' + element[1] * square + 'px;"></div>';
         });
 
-        circle.getPosition().forEach(element => {
-            document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="circle" style="height:' + square + 'px;width:' + square + 'px;top:' + element[0] * square + 'px;left:' + element[1] * square + 'px;"></div>';
+        circleBleu.getPosition().forEach(element => {
+            document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="circle" style="background:blue;height:' + square + 'px;width:' + square + 'px;top:' + element[0] * square + 'px;left:' + element[1] * square + 'px;"></div>';
+        });
+
+        circleWhite.getPosition().forEach(element => {
+            document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="circle" style="background:white;height:' + square + 'px;width:' + square + 'px;top:' + element[0] * square + 'px;left:' + element[1] * square + 'px;"></div>';
+        });
+
+        circleRed.getPosition().forEach(element => {
+            document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + '<div class="circle" style="background:red;height:' + square + 'px;width:' + square + 'px;top:' + element[0] * square + 'px;left:' + element[1] * square + 'px;"></div>';
         });
 
         document.querySelector('#grille').innerHTML = document.querySelector('#grille').innerHTML + "<div id='grilleScore'> Score : " + score + "</div>";
