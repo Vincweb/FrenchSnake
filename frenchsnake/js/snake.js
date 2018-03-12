@@ -167,6 +167,7 @@
     function syncBDD() {
 
         // A voir
+        getScore();
     }
 
     // Set cookie
@@ -283,6 +284,11 @@
             // if new high score
             // Save the score
             saveScore();
+
+            // Get new hight score
+            if (connection) {
+                syncBDD();
+            }
         }
 
         document.querySelector('#score').innerHTML = '<h1> Score : ' + score + '</h1>';
