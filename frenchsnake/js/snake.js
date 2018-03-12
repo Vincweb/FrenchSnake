@@ -284,11 +284,6 @@
             // if new high score
             // Save the score
             saveScore();
-
-            // Get new hight score
-            if (connection) {
-                syncBDD();
-            }
         }
 
         document.querySelector('#score').innerHTML = '<h1> Score : ' + score + '</h1>';
@@ -314,6 +309,9 @@
             circle.newCircle();
             snake.addSnake();
             score = score + 10;
+            if (speed > 20) {
+                speed = speed - 1;
+            }
         }
 
         // Snake touch wall
@@ -510,6 +508,6 @@
     menu();
 
     // Disebale Click right
-    document.oncontextmenu = new Function("return false");
+    //document.oncontextmenu = new Function("return false");
 
 })()
