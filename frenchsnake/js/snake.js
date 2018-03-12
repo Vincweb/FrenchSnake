@@ -4,37 +4,6 @@
  * <vincent.caudron@hotmail.fr>
  */
 
-// Test this by running the code snippet below and then
-// use the "Offline" checkbox in DevTools Network panel
-var connection;
-window.addEventListener('load', function () {
-    function updateOnlineStatus(event) {
-        if (navigator.onLine) {
-            // handle online status
-            console.log('Your are online !');
-            connection = true;
-        } else {
-            // handle offline status
-            console.log('Your are offline !');
-            connection = false;
-        }
-    }
-
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-
-    updateOnlineStatus();
-});
-
-
-// Web Storage 
-if (typeof(Storage) !== "undefined") {
-    console.log("Web Storage work !");
-} else {
-    console.log("Web Storage don't work !");
-}
-
-
 (function frenshsnake() {
 
     console.log("Welcome to the French Snake !");
@@ -110,8 +79,6 @@ if (typeof(Storage) !== "undefined") {
 
         this.newCircle = function () {
             position = new Array();
-            var freeCase = [Height];
-            //debugger;
             position.push(new Array(randNumberHeight(), randNumberWidth()));
         }
 
@@ -136,31 +103,143 @@ if (typeof(Storage) !== "undefined") {
         this.newCircle();
     }
 
+    // Test the connection
+    var connection = false;
+    window.addEventListener('load', function () {
+        function updateOnlineStatus(event) {
+            if (navigator.onLine) {
+                // handle online status
+                console.log('Your are online !');
+                // Get Score BDD
+                syncBDD();
+                connection = true;
+            } else {
+                // handle offline status
+                console.log('Your are offline !');
+                connection = false;
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        updateOnlineStatus();
+
+        // Get the bestScore
+        getScore();
+    });
+
+    // Rang Score
+    function sortScore() {
+
+        if (bestScore.length >= 5) {
+            for (var i = 0; i < 5; i++) {
+
+                if (bestScore[i]["score"] < score) {
+
+                    bestScore.push({ "name": pseudo, "score": score });
+
+                    bestScore.sort(function (a, b) {
+                        return a.score - b.score;
+                    });
+                    bestScore.shift();
+
+                    return true;
+                }
+
+            }
+
+            return false;
+
+        } else {
+
+            bestScore.push({ "name": pseudo, "score": score });
+
+            bestScore.sort(function (a, b) {
+                return a.score - b.score;
+            });
+
+            return true;
+        }
+    }
+
+    // Synchronise BDD
+    function syncBDD() {
+
+        // A voir
+    }
+
+    // Set cookie
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+        var expires = "expires=" + d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+    // Get cookie
+    function getCookie(cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+
     // Get score 
     function getScore() {
 
         if (connection) {
+
             var ref = firebase.database().ref('score');
 
-            ref.on("value", function (snapshot) {
+            ref.once("value", function (snapshot) {
+
                 var scoreOnline = snapshot.val();
 
-                scoreOnline = Object.entries(scoreOnline);
+                if (scoreOnline != null) {
+                    scoreOnline = Object.entries(scoreOnline);
 
-                scoreOnline.forEach(element => {
-                    bestScore.push([element[1]['Score'], element[1]['Username']]);
-                });
+                    scoreOnline.forEach(element => {
+                        bestScore.push({ "name": element[1]['name'], "score": element[1]['score'] });
+                    });
+
+                    bestScore.sort(function (a, b) {
+                        return a.score - b.score;
+                    });
+
+                    bestScore = bestScore.slice(-5);
+                }
+                console.log(bestScore);
+
+                ref.off();
             });
+
+            console.log("BestScore downloaded !");
+
+        } else {
+
+            // Web Storage 
+            try {
+                //console.log("Web Storage work !");
+                bestScore = JSON.parse(localStorage.getItem('bestScore'));
+            } catch (error) {
+                //console.log("Web Storage don't work !");
+                bestScore = (getCookie("bestScore") == "") ? Array() : JSON.parse(getCookie("bestScore"));
+            }
         }
-
-        //localStorage.getItem('bestScore');
-
     }
 
     // Save Score
     function saveScore() {
-                 
-        //sessionStorage.setItem("bestScore", bestScore);
 
         if (connection) {
             // Get a reference to the database service
@@ -168,14 +247,21 @@ if (typeof(Storage) !== "undefined") {
 
             function writeUserData(score) {
                 firebase.database().ref('score/' + Date.now()).set({
-                    Username: pseudo,
-                    Score: score
+                    name: pseudo,
+                    score: score
                 });
             }
 
             writeUserData(score);
+        }
 
-            console.log("Score saved !");
+        // Web Storage 
+        try {
+            //console.log("Web Storage work !");
+            localStorage.setItem("bestScore", JSON.stringify(bestScore));
+        } catch (error) {
+            //console.log("Web Storage don't work !");
+            setCookie("bestScore", JSON.stringify(bestScore), 10);
         }
     }
 
@@ -191,12 +277,19 @@ if (typeof(Storage) !== "undefined") {
 
         console.log("Your score : " + score);
 
-        // Save the score
-        saveScore();
+        // Function sort bestScore
+        if (sortScore()) {
+            // if new high score
+            // Save the score
+            saveScore();
+        }
 
         document.querySelector('#score').innerHTML = '<h1> Score : ' + score + '</h1>';
 
-        getScore();
+        var bestScoreRev = [].concat(bestScore).reverse();
+        for (var i in bestScoreRev) {
+            document.querySelector('#score').innerHTML = document.querySelector('#score').innerHTML + '<h4> ' + parseFloat(parseFloat(i) + parseFloat(1)) + '.  ' + bestScoreRev[i]["name"] + ' - ' + bestScoreRev[i]["score"] + '</h4>';
+        }
 
         document.onkeydown = function () {
             switch (window.event.keyCode) {
@@ -333,6 +426,7 @@ if (typeof(Storage) !== "undefined") {
         document.onkeydown = function () {
             switch (window.event.keyCode) {
                 case KEY_ENTER:
+                    document.querySelector('.pseudo').focus();
                     pseudo = document.querySelector('.pseudo').value;
                     if (pseudo.length < 3) {
                         console.log("Choose a pseudo (minumum 3 caracters) !")
@@ -340,6 +434,9 @@ if (typeof(Storage) !== "undefined") {
                         console.log("Your pseudo : " + pseudo);
                         game();
                     }
+                    break;
+                default:
+                    document.querySelector('.pseudo').focus();
                     break;
             }
         }
