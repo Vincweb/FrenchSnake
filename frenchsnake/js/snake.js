@@ -16,7 +16,8 @@
     const KEY_ENTER = 13;
 
     // Level Game
-    var speed = 80;
+    var speedinit = 80;
+    var speed = speedinit;
     var square = 40;
     var score = 0;
     var bestScore = Array();
@@ -288,7 +289,10 @@
         // Stop the move
         clearInterval(move);
         snake = new Snake();
-        circle = new Circle();
+        circleBleu = new Circle();
+        circleWhite = new Circle();
+        circleRed = new Circle();
+        speed = speedinit;
 
         console.log("Your score : " + score);
 
