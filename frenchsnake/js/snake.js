@@ -220,7 +220,6 @@
                 }
                 console.log(bestScore);
 
-                ref.off();
             });
 
             console.log("BestScore downloaded !");
@@ -253,6 +252,8 @@
             }
 
             writeUserData(score);
+
+            console.log("Score Saved in BDD !")
         }
 
         // Web Storage 
@@ -503,6 +504,6 @@
     menu();
 
     // Disebale Click right
-    //document.oncontextmenu = new Function("return false");
+    document.oncontextmenu = new Function("return false");
 
 })()
