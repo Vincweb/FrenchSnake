@@ -346,7 +346,7 @@
                 snake.subSnake();
             } else {
                 score = score + 10;
-                if (speed > 50) {
+                if (speed > 60) {
                     speed = speed - 2;
                 }
             }
@@ -557,6 +557,6 @@
     menu();
 
     // Disebale Click right
-    //document.oncontextmenu = new Function("return false");
+    document.oncontextmenu = new Function("return false");
 
 })()
