@@ -20,7 +20,7 @@
     var speed = speedinit;
     var square = 40;
     var score = 0;
-    var bestScore = Array();
+    let bestScore = Array();
 
     // Create grille
     const Height = (Math.round(window.innerHeight / square) % 2 == 0) ? Math.round(window.innerHeight / square) : Math.round(window.innerHeight / square) - 1;
@@ -223,6 +223,7 @@
                 if (scoreOnline != null) {
                     scoreOnline = Object.entries(scoreOnline);
 
+                    //console.log(scoreOnline);
                     scoreOnline.forEach(element => {
                         bestScore.push({ "name": element[1]['name'], "score": element[1]['score'] });
                     });
@@ -233,7 +234,7 @@
 
                     bestScore = bestScore.slice(-5);
                 }
-                console.log(bestScore);
+                //console.log(bestScore);
 
             });
 
