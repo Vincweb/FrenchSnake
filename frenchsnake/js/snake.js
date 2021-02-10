@@ -20,7 +20,7 @@
     var speed = speedinit;
     var square = 40;
     var score = 0;
-    let bestScore = Array();
+    var bestScore = [];
 
     // Create grille
     const Height = (Math.round(window.innerHeight / square) % 2 == 0) ? Math.round(window.innerHeight / square) : Math.round(window.innerHeight / square) - 1;
@@ -117,32 +117,6 @@
         this.newCircle();
     }
 
-    // Test the connection
-    var connection = false;
-    window.addEventListener('load', function () {
-        function updateOnlineStatus(event) {
-            if (navigator.onLine) {
-                // handle online status
-                console.log('Your are online !');
-                // Get Score BDD
-                syncBDD();
-                connection = true;
-            } else {
-                // handle offline status
-                console.log('Your are offline !');
-                connection = false;
-            }
-        }
-
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-
-        updateOnlineStatus();
-
-        // Get the bestScore
-        getScore();
-    });
-
     // Rang Score
     function sortScore() {
 
@@ -177,13 +151,6 @@
         }
     }
 
-    // Synchronise BDD
-    function syncBDD() {
-
-        // A voir
-        getScore();
-    }
-
     // Set cookie
     function setCookie(cname, cvalue, exdays) {
         var d = new Date();
@@ -211,43 +178,15 @@
 
     // Get score 
     function getScore() {
-
-        if (connection) {
-
-            var ref = firebase.database().ref('score');
-
-            ref.once("value", function (snapshot) {
-
-                var scoreOnline = snapshot.val();
-
-                if (scoreOnline != null) {
-                    scoreOnline = Object.entries(scoreOnline);
-
-                    //console.log(scoreOnline);
-                    scoreOnline.forEach(element => {
-                        bestScore.push({ "name": element[1]['name'], "score": element[1]['score'] });
-                    });
-
-                    bestScore.sort(function (a, b) {
-                        return a.score - b.score;
-                    });
-
-                    bestScore = bestScore.slice(-5);
-                }
-                //console.log(bestScore);
-
-            });
-
-            console.log("BestScore downloaded !");
-
-        } else {
-
-            // Web Storage 
-            try {
-                //console.log("Web Storage work !");
+        // Web Storage 
+        try {
+            //console.log("Web Storage work !");
+            if(localStorage.getItem('bestScore')){
                 bestScore = JSON.parse(localStorage.getItem('bestScore'));
-            } catch (error) {
-                //console.log("Web Storage don't work !");
+            }
+        } catch (error) {
+            //console.log("Web Storage don't work !");
+            if(getCookie("bestScore")){
                 bestScore = (getCookie("bestScore") == "") ? Array() : JSON.parse(getCookie("bestScore"));
             }
         }
@@ -255,23 +194,6 @@
 
     // Save Score
     function saveScore() {
-
-        if (connection) {
-            // Get a reference to the database service
-            var database = firebase.database();
-
-            function writeUserData(score) {
-                firebase.database().ref('score/' + Date.now()).set({
-                    name: pseudo,
-                    score: score
-                });
-            }
-
-            writeUserData(score);
-
-            console.log("Score Saved in BDD !")
-        }
-
         // Web Storage 
         try {
             //console.log("Web Storage work !");
@@ -473,7 +395,7 @@
         }
     }
 
-    // Choose the pseudo
+    // Choose pseudo
     function choosePseudo() {
 
         visibilityMenu("pseudo");
@@ -501,6 +423,51 @@
         }
     }
 
+    // Choose score
+    function chooseScore() {
+
+        visibilityMenu("gameOver");
+
+        document.querySelector('#score').innerHTML = '<h1> Score : ' + score + '</h1>';
+
+        var bestScoreRev = [].concat(bestScore).reverse();
+        for (var i in bestScoreRev) {
+            document.querySelector('#score').innerHTML = document.querySelector('#score').innerHTML + '<h4> ' + parseFloat(parseFloat(i) + parseFloat(1)) + '.  ' + bestScoreRev[i]["name"] + ' - ' + bestScoreRev[i]["score"] + '</h4>';
+        }
+
+        document.onkeydown = function () {
+            switch (window.event.keyCode) {
+                case KEY_ENTER:
+                    chooseMenu();
+                    break;
+            }
+        }
+    }
+
+    // Choose menu
+    function chooseMenu() {
+
+        visibilityMenu("choose");
+
+        document.onkeydown = function () {
+            switch (window.event.keyCode) {
+                case KEY_UP:
+                    if (pseudo == null) {
+                        choosePseudo();
+                    } else {
+                        game();
+                    }
+                    break;
+                case KEY_DOWN:
+                    chooseScore();
+                    break;
+                case KEY_LEFT:
+                    // Menu
+                    break;
+            }
+        }
+    }
+
     // Menu game
     function menu() {
 
@@ -509,17 +476,7 @@
         document.onkeydown = function () {
             switch (window.event.keyCode) {
                 case KEY_ENTER:
-                    if (pseudo == null) {
-                        choosePseudo();
-                    } else {
-                        game();
-                    }
-                    break;
-                case KEY_DOWN:
-                    // Menu
-                    break;
-                case KEY_UP:
-                    // Menu
+                    chooseMenu();
                     break;
             }
         }
@@ -530,6 +487,16 @@
         if (page == "menu") {
             document.querySelector('#menu').style.opacity = "1";
             document.querySelector('#menu').style.display = "block";
+            document.querySelector('#choose').style.display = "none";
+            document.querySelector('#score').style.display = "none";
+            document.querySelector('#pseudo').style.display = "none";
+            document.querySelector('#grille').style.display = "none";
+        }
+
+        if (page == "choose") {
+            document.querySelector('#menu').style.display = "none";
+            document.querySelector('#choose').style.opacity = "1";
+            document.querySelector('#choose').style.display = "block";
             document.querySelector('#score').style.display = "none";
             document.querySelector('#pseudo').style.display = "none";
             document.querySelector('#grille').style.display = "none";
@@ -539,6 +506,7 @@
             document.querySelector('#pseudo').style.display = "block";
             document.querySelector('#pseudo').style.opacity = "1";
             document.querySelector('#menu').style.display = "none";
+            document.querySelector('#choose').style.display = "none";
         }
 
         if (page == "game") {
@@ -548,15 +516,20 @@
             document.querySelector('#menu').style.display = "none";
             document.querySelector('#grille').style.display = "block";
             document.querySelector('#grille').style.opacity = "1";
-
+            document.querySelector('#choose').style.display = "none";
         }
 
         if (page == "gameOver") {
             document.querySelector('#score').style.opacity = "1";
             document.querySelector('#score').style.display = "block";
             document.querySelector('#grille').style.opacity = "0";
+            document.querySelector('#menu').style.display = "none";
+            document.querySelector('#choose').style.display = "none";
         }
     }
+
+    // Get the bestScore
+    getScore();
 
     // Lancement du Menu
     menu();
